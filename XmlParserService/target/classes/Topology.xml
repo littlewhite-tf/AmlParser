@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<UANodeSet xmlns="http://opcfoundation.org/UA/2011/03/UANodeSet.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<NamespaceUris>
+<Uri/>
+<Uri/>
+</NamespaceUris>
+<Aliases>
+<Alias Alias="Boolean"/>
+<Alias Alias="SByte"/>
+</Aliases>
+<UAObjectType BrowseName="Tool" NodeId="ns=2;i=1">
+<DisplayName/>
+</UAObjectType>
+</UANodeSet>
