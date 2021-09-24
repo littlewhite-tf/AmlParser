@@ -1,6 +1,5 @@
 package org.imc.service;
 
-import org.apache.maven.surefire.shade.org.apache.commons.lang3.tuple.Pair;
 import org.imc.aml.model.InterfaceClassLib;
 import org.imc.aml.model.RoleClassLib;
 import org.imc.aml.model.SystemUnitClass;
@@ -8,9 +7,8 @@ import org.imc.aml.model.SystemUnitClassLib;
 import org.imc.aml.model.enums.ReferenceEnum;
 import org.imc.aml.model.enums.RelationEnum;
 import org.imc.aml.model.enums.UADataTypeEnum;
-import org.imc.aml.model.mapping.ReferenceMapping;
+import org.imc.aml.model.mapping.RelationReferenceMapping;
 import org.imc.tools.DataValidate;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.*;
 
@@ -19,6 +17,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
@@ -54,8 +53,8 @@ public class AmlParserService {
     private static final String UANODESET = "UANodeSet";
     private static final String INTERFACECLASS = "InterfaceClass";
     private static final String SYSTEMUNITCLASS = "SystemUnitClass";
-    private static final String EXTERNALINTERFACE = "ExternalInterface ";
-    private static final String SUPPORTEDROLECLASS = "SupportedRoleClass ";
+    private static final String EXTERNALINTERFACE = "ExternalInterface";
+    private static final String SUPPORTEDROLECLASS = "SupportedRoleClass";
     private static final String REFROLECLASSPATH="RefRoleClassPath";
     private static int i;
     private static int ns = 2;
@@ -84,12 +83,11 @@ public class AmlParserService {
 
             //1.解析角色类库
             NodeList roleClassLibList = d.getElementsByTagName(ROLECLASSLIB);
+            // 1.1初始化内部数据结构
             for(int j = 0;j<roleClassLibList.getLength();j++){
                 parseRoleClassLib(roleClassLibList.item(j));
             }
-            for(int j = 0;j<roleClassLibList.getLength();j++){
-                parseRoleClassLib(roleClassLibList.item(j));
-            }
+            // 1.2构造输出Element
             for(Map.Entry<String,RoleClassLib> entry:roleClassLibMap.entrySet()) {
                 String roleClassLibName = entry.getKey();
                 RoleClassLib roleClassLib = entry.getValue();
@@ -97,37 +95,45 @@ public class AmlParserService {
             }
 
 
-//            //2.解析接口类库
-//            NodeList interfaceClassLibList = d.getElementsByTagName(INTERFACECLASSLIB);
-//            for(int j = 0;j<interfaceClassLibList.getLength();j++){
-//                parseInterfaceClassLib(interfaceClassLibList.item(j));
-//            }
-//            //3.解析系统单元类库
-//            NodeList systemUnitClassLibList = d.getElementsByTagName(SYSTEMUNITCLASSLIB);
-//            for(int j = 0;j<systemUnitClassLibList.getLength();j++){
-//                parseSystemUnitClassLib(systemUnitClassLibList.item(j));
-//            }
-//
+            //2.解析接口类库
+            NodeList interfaceClassLibList = d.getElementsByTagName(INTERFACECLASSLIB);
+            // 2.1初始化内部数据结构
+            for(int j = 0;j<interfaceClassLibList.getLength();j++){
+                parseInterfaceClassLib(interfaceClassLibList.item(j));
+            }
+            // 2.2构造输出Element
+            for(Map.Entry<String,InterfaceClassLib> entry:interfaceClassLibMap.entrySet()) {
+                String interfaceClassLibName = entry.getKey();
+                InterfaceClassLib interfaceClassLib = entry.getValue();
+                buildInterface(interfaceClassLib,interfaceClassLibName);
+            }
+
+            //3.解析系统单元类库
+            NodeList systemUnitClassLibList = d.getElementsByTagName(SYSTEMUNITCLASSLIB);
+            // 3.1初始化内部数据结构
+            for(int j = 0;j<systemUnitClassLibList.getLength();j++){
+                parseSystemUnitClassLib(systemUnitClassLibList.item(j));
+            }
+            // 3.2构造输出Element
+            for(Map.Entry<String,SystemUnitClassLib> entry:systemUnitClassLibMap.entrySet()) {
+                String interfaceClassLibName = entry.getKey();
+                SystemUnitClassLib systemUnitClassLib = entry.getValue();
+                for(Map.Entry<String,SystemUnitClass> systemUnitClassEntry:systemUnitClassLib.getSystemUnitClassMap().entrySet()){
+                    String systemUnitClassName = systemUnitClassEntry.getKey();
+                    SystemUnitClass systemUnitClass = systemUnitClassEntry.getValue();
+                    Element systemUnitClassElement= buildSystemUnitClassElement(systemUnitClass);
+                    opcUaXml.appendChild(systemUnitClassElement);
+                }
+            }
 //            //4.解析实例层次
 //            Node instanceHierarchy = basicObjectTypeMap.get(CAEXFileBasicObjectTypeEnum.INSTANCEHIERARCHY.getName());
 
-
             // 写入文件
-            //将现有结构转换为xml文件
-            //创建TransformerFactory对象
-            TransformerFactory tff = TransformerFactory.newInstance();
-            //创建Transformer对象
-            Transformer tf = tff.newTransformer();
-            //设置换行
-            tf.setOutputProperty(OutputKeys.INDENT, "yes");
-            //调用Transformer对象的transform方法，创建xml文件
-            tf.transform(new DOMSource(opcUaXml), new StreamResult(new File(".\\XmlParserService\\src\\main\\resources\\Topology.xml")));
-          } catch (Exception e) {
+            exportElementToFile(opcUaXml,"Topology.xml");
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
-
-
 
     private void parseRoleClassLib(Node roleClassLibNode) {
         NamedNodeMap attributes = roleClassLibNode.getAttributes();
@@ -177,7 +183,12 @@ public class AmlParserService {
         for (int j = 0; j < interfaceClassLibNode.getChildNodes().getLength(); j++) {
             Node interfaceClassNode = interfaceClassLibNode.getChildNodes().item(j);
             if (interfaceClassNode.getNodeType() == Node.ELEMENT_NODE && INTERFACECLASS.equals(interfaceClassNode.getNodeName())) {
-                buildInterface(interfaceClassNode,interfaceClassLib);
+                Map<String,String> attributeMap = new HashMap<>();
+                NamedNodeMap interfaceClassNodeAttributes = interfaceClassNode.getAttributes();
+                for (int i = 0; i < interfaceClassNodeAttributes.getLength(); i++) {
+                    attributeMap.put(interfaceClassNodeAttributes.item(i).getNodeName(),interfaceClassNodeAttributes.item(i).getNodeValue());
+                }
+                interfaceClassLib.getInterfaceClassAttributes().put(attributeMap.get(NAME),attributeMap);
             }else if(interfaceClassNode.getNodeType() == Node.ELEMENT_NODE && VERSION.equals(interfaceClassNode.getNodeName())){
                 interfaceClassLib.setVersion(interfaceClassNode.getNodeValue());
             }
@@ -185,15 +196,13 @@ public class AmlParserService {
         interfaceClassLibMap.put(interfaceClassLib.getAttributes().get(NAME),interfaceClassLib);
     }
 
-    private void buildInterface(Node interfaceNode,InterfaceClassLib interfaceClassLib) {
-        NamedNodeMap attributes = interfaceNode.getAttributes();
-        Map<String,String> attributeMap = new HashMap<>();
-        for (int i = 0; i < attributes.getLength(); i++) {
-            attributeMap.put(attributes.item(i).getNodeName(),attributes.item(i).getNodeValue());
+    private void buildInterface(InterfaceClassLib interfaceClassLib,String interfaceName) {
+        for(Map.Entry<String,Map<String,String>> entry:interfaceClassLib.getInterfaceClassAttributes().entrySet()){
+            String interfaceClassName = entry.getKey();
+            Map<String,String> interfaceClassAttributes = entry.getValue();
+            Element element = buildObjectTypeXml(interfaceClassName,interfaceClassAttributes);
+            opcUaXml.appendChild(element);
         }
-        Element element = buildObjectTypeXml(attributeMap.get(NAME),attributeMap);
-        interfaceClassLib.getInterfaceClassAttributes().put(attributeMap.get(NAME),attributeMap);
-        opcUaXml.appendChild(element);
     }
 
     private void parseSystemUnitClassLib(Node systemUnitClassLibNode) {
@@ -208,12 +217,10 @@ public class AmlParserService {
             Node sonOfLib = systemUnitClassLibNode.getChildNodes().item(j);
             if (sonOfLib.getNodeType() == Node.ELEMENT_NODE && SYSTEMUNITCLASS.equals(sonOfLib.getNodeName())) {
                 // 解析单个系统单元类，如电动螺丝刀类
-                Pair<Element,SystemUnitClass> result = buildSystemUnitClass(sonOfLib);
-                opcUaXml.appendChild(result.getKey());
-                SystemUnitClass systemUnitClass = result.getValue();
+                SystemUnitClass systemUnitClass = buildSystemUnitClass(sonOfLib);
                 systemUnitClassLib.getSystemUnitClassMap().put(systemUnitClass.getAttributesMap().get(NAME),systemUnitClass);
             }else if(sonOfLib.getNodeType() == Node.ELEMENT_NODE && VERSION.equals(sonOfLib.getNodeName())){
-                systemUnitClassLib.setVersion(sonOfLib.getNodeValue());
+                systemUnitClassLib.setVersion(sonOfLib.getTextContent());
             }
         }
         systemUnitClassLibMap.put(systemUnitClassLib.getAttributes().get(NAME),systemUnitClassLib);
@@ -273,7 +280,7 @@ public class AmlParserService {
         return element;
     }
 
-    private Pair<Element,SystemUnitClass> buildSystemUnitClass(Node systemUnitClassNode) {
+    private SystemUnitClass buildSystemUnitClass(Node systemUnitClassNode) {
         NamedNodeMap attributes = systemUnitClassNode.getAttributes();
         SystemUnitClass systemUnitClass = new SystemUnitClass();
         // 1.构造工程类相关
@@ -281,7 +288,6 @@ public class AmlParserService {
         for (int i = 0; i < attributes.getLength(); i++) {
             systemUnitClass.getAttributesMap().put(attributes.item(i).getNodeName(),attributes.item(i).getNodeValue());
         }
-        String name = systemUnitClass.getAttributesMap().get(NAME);
         // 1.2.SupportedRoleClass和ExternalInterface
         for (int j = 0; j < systemUnitClassNode.getChildNodes().getLength(); j++) {
             Node sonOfSystemUnitClass = systemUnitClassNode.getChildNodes().item(j);
@@ -299,50 +305,55 @@ public class AmlParserService {
                 }
             }
         }
-        // 2. 写Element相关
-        Element element = dom.createElement(UAOBJECTTYPE);
-        // 设置属性
-        element.setAttribute(BROWSENAME, name);
-        String nodeId = generateNodeId();
-        element.setAttribute(NODEID, nodeId);
-        // 一级子节点 displayName
-        Element displayNameBean = buildBeanValue(DISPLAYNAME, name);
-        element.appendChild(displayNameBean);
-        // 一级子节点References
-        Element refersEle = dom.createElement(REFERENCES);
-        // ExternalInterface
-        if(systemUnitClass.getExternalInterfaceAttributes().size() > 0 ){
-            String objectName = systemUnitClass.getExternalInterfaceAttributes().get(NAME);
-            String refBaseClassPath = systemUnitClass.getExternalInterfaceAttributes().get(REFBASECLASSPATH);
-            String[] refPath = refBaseClassPath.split("/");
-            String interfaceClassLibName = refPath[0];
-            String interfaceClassName = refPath[1];
-            String refNodeId = interfaceClassLibMap.get(interfaceClassLibName).getInterfaceClassAttributes().get(interfaceClassName).get(NODEID);
-            // 根据接口创建EnergySupply对象节点，及其引用
-            String objectNodeId = buildObjectByInterface(refNodeId,element.getAttribute(NODEID),objectName,systemUnitClass.getExternalInterfaceAttributes());
-            //创建ElectricScrewdriver的引用
-            Element ref = dom.createElement(REFERENCE);
-            ref.setAttribute(REFERENCETYPE, ReferenceMapping.getMap().get(RelationEnum.EXTERNALINTERFACE.getName()));
-            ref.setTextContent(objectNodeId);
-            refersEle.appendChild(ref);
-        }
-
-        // SupportedRoleClass
-        if(systemUnitClass.getSupportedRoleClassAttributes().size() > 0 ){
-            String refRoleClassPath = systemUnitClass.getSupportedRoleClassAttributes().get(REFROLECLASSPATH);
-            String[] refPath = refRoleClassPath.split("/");
-            String roleClassLibName = refPath[0];
-            String roleClassName = refPath[1];
-            String refNodeId = roleClassLibMap.get(roleClassLibName).getRoleClassAttributes().get(roleClassName).get(NODEID);
-            //创建ElectricScrewdriver的引用
-            Element ref = dom.createElement(REFERENCE);
-            ref.setAttribute(REFERENCETYPE, ReferenceMapping.getMap().get(RelationEnum.SUPPORTEDROLECLASS.getNodeId()));
-            ref.setTextContent(refNodeId);
-            refersEle.appendChild(ref);
-        }
-        element.appendChild(refersEle);
-        return Pair.of(element,systemUnitClass);
+        return systemUnitClass;
     }
+     private Element buildSystemUnitClassElement(SystemUnitClass systemUnitClass){
+         String name = systemUnitClass.getAttributesMap().get(NAME);
+
+         // 2. 写Element相关
+         Element element = dom.createElement(UAOBJECTTYPE);
+         // 设置属性
+         element.setAttribute(BROWSENAME, name);
+         String nodeId = generateNodeId();
+         element.setAttribute(NODEID, nodeId);
+         // 一级子节点 displayName
+         Element displayNameBean = buildBeanValue(DISPLAYNAME, name);
+         element.appendChild(displayNameBean);
+         // 一级子节点References
+         Element refersEle = dom.createElement(REFERENCES);
+         // ExternalInterface
+         if(systemUnitClass.getExternalInterfaceAttributes().size() > 0 ){
+             String objectName = systemUnitClass.getExternalInterfaceAttributes().get(NAME);
+             String refBaseClassPath = systemUnitClass.getExternalInterfaceAttributes().get(REFBASECLASSPATH);
+             String[] refPath = refBaseClassPath.split("/");
+             String interfaceClassLibName = refPath[0];
+             String interfaceClassName = refPath[1];
+             String refNodeId = interfaceClassLibMap.get(interfaceClassLibName).getInterfaceClassAttributes().get(interfaceClassName).get(NODEID);
+             // 根据接口创建EnergySupply对象节点，及其引用
+             String objectNodeId = buildObjectByInterface(refNodeId,element.getAttribute(NODEID),objectName,systemUnitClass.getExternalInterfaceAttributes());
+             //创建ElectricScrewdriver的引用
+             Element ref = dom.createElement(REFERENCE);
+             ref.setAttribute(REFERENCETYPE, RelationReferenceMapping.getMap().get(RelationEnum.EXTERNALINTERFACE.getName()));
+             ref.setTextContent(objectNodeId);
+             refersEle.appendChild(ref);
+         }
+
+         // SupportedRoleClass
+         if(systemUnitClass.getSupportedRoleClassAttributes().size() > 0 ){
+             String refRoleClassPath = systemUnitClass.getSupportedRoleClassAttributes().get(REFROLECLASSPATH);
+             String[] refPath = refRoleClassPath.split("/");
+             String roleClassLibName = refPath[0];
+             String roleClassName = refPath[1];
+             String refNodeId = roleClassLibMap.get(roleClassLibName).getRoleClassAttributes().get(roleClassName).get(NODEID);
+             //创建ElectricScrewdriver的引用
+             Element ref = dom.createElement(REFERENCE);
+             ref.setAttribute(REFERENCETYPE, RelationReferenceMapping.getMap().get(RelationEnum.SUPPORTEDROLECLASS.getName()));
+             ref.setTextContent(refNodeId);
+             refersEle.appendChild(ref);
+         }
+         element.appendChild(refersEle);
+         return element;
+     }
 
     private String buildObjectByInterface(String refNodeId,String parentNodeId,String objectName,Map<String,String> additionalVariable){
         String nodeId = generateNodeId();
@@ -387,17 +398,21 @@ public class AmlParserService {
         variable.setAttribute(PARENTNODEID, parentNodeId);
         Element displayName = buildBeanValue(DISPLAYNAME,name);
         variable.appendChild(displayName);
-
-        if(DataValidate.isInteger(value)){
-            variable.setAttribute(DATATYPE, UADataTypeEnum.INT.getName());
-        }else if(DataValidate.isDouble(value)){
-            variable.setAttribute(DATATYPE, UADataTypeEnum.DOUBLE.getName());
-        }else{
-            variable.setAttribute(DATATYPE, UADataTypeEnum.STRING.getName());
-        }
+        Element valueData;
         HashMap<String, String> valueAttribute = new HashMap<String, String>();
         valueAttribute.put("xmlns", "http://opcfoundation.org/UA/2008/02/Types.xsd");
-        Element valueBean = buildBeanAttributeValue(VALUE,value,valueAttribute);
+        if(DataValidate.isInteger(value)){
+            variable.setAttribute(DATATYPE, UADataTypeEnum.INT.getName());
+            valueData = buildBeanAttributeValue(UADataTypeEnum.INT.getName(),value,valueAttribute);
+        }else if(DataValidate.isDouble(value)){
+            variable.setAttribute(DATATYPE, UADataTypeEnum.DOUBLE.getName());
+            valueData = buildBeanAttributeValue(UADataTypeEnum.DOUBLE.getName(),value,valueAttribute);
+        }else{
+            variable.setAttribute(DATATYPE, UADataTypeEnum.STRING.getName());
+            valueData = buildBeanAttributeValue(UADataTypeEnum.STRING.getName(),value,valueAttribute);
+        }
+        Element valueBean = dom.createElement(VALUE);
+        valueBean.appendChild(valueData);
         variable.appendChild(valueBean);
 
         Element refersEle = dom.createElement(REFERENCES);
@@ -429,4 +444,17 @@ public class AmlParserService {
     private String generateNodeId() {
         return String.format("ns=%s;i=%s", ns, i++);
     }
+
+    private void exportElementToFile(Element element,String fileName) throws TransformerException {
+        //将现有结构转换为xml文件
+        //创建TransformerFactory对象
+        TransformerFactory tff = TransformerFactory.newInstance();
+        //创建Transformer对象
+        Transformer tf = tff.newTransformer();
+        //设置换行
+        tf.setOutputProperty(OutputKeys.INDENT, "yes");
+        //调用Transformer对象的transform方法，创建xml文件
+        tf.transform(new DOMSource(element), new StreamResult(new File(".\\XmlParserService\\src\\main\\resources\\"+fileName)));
+    }
+
 }

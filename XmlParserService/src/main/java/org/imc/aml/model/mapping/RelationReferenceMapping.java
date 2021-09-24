@@ -5,16 +5,20 @@ import org.imc.aml.model.enums.ReferenceEnum;
 import org.imc.aml.model.enums.RelationEnum;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
  * AML关系映射到引用类型的
  */
-public class ReferenceMapping {
+@Component
+public class RelationReferenceMapping {
 
     private static Map<String,String> map;
-    ReferenceMapping(){
+    RelationReferenceMapping(){
+        map = new HashMap<>();
         map.put(RelationEnum.EXTERNALINTERFACE.getName(), ReferenceEnum.HASCOMPONENT.getName());
+        map.put(RelationEnum.SUPPORTEDROLECLASS.getName(), "ns=1;i=4001");
     }
 
     public static Map<String, String> getMap() {
