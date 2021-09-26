@@ -1,9 +1,7 @@
 package org.imc.service;
 
-import org.imc.aml.model.InterfaceClassLib;
-import org.imc.aml.model.RoleClassLib;
-import org.imc.aml.model.SystemUnitClass;
-import org.imc.aml.model.SystemUnitClassLib;
+import org.apache.tomcat.util.buf.StringUtils;
+import org.imc.aml.model.*;
 import org.imc.aml.model.enums.ReferenceEnum;
 import org.imc.aml.model.enums.RelationEnum;
 import org.imc.aml.model.enums.UADataTypeEnum;
@@ -32,6 +30,8 @@ public class AmlParserService {
     private static final String ALIAS  = "Alias";
     private static final String ROLECLASSLIB  = "RoleClassLib";
     private static final String INTERFACECLASSLIB  = "InterfaceClassLib";
+    private static final String INSTANCEHIERARCHY  = "InstanceHierarchy";
+    private static final String INTERNALELEMENT  = "InternalElement";
     private static final String SYSTEMUNITCLASSLIB  = "SystemUnitClassLib";
     private static final String ROLECLASS = "RoleClass";
     private static final String NAME = "Name";
@@ -55,7 +55,11 @@ public class AmlParserService {
     private static final String SYSTEMUNITCLASS = "SystemUnitClass";
     private static final String EXTERNALINTERFACE = "ExternalInterface";
     private static final String SUPPORTEDROLECLASS = "SupportedRoleClass";
+    private static final String ATTRIBUTE  = "Attribute";
     private static final String REFROLECLASSPATH="RefRoleClassPath";
+    private static final String REFBASESYSTEMUNITPATH ="RefBaseSystemUnitPath";
+    private static final String ROLEREQUIREMENTS="RoleRequirements";
+
     private static int i;
     private static int ns = 2;
     private Element opcUaXml;
@@ -69,6 +73,8 @@ public class AmlParserService {
     private Map<String, InterfaceClassLib> interfaceClassLibMap= new HashMap<>();
 
     private Map<String, SystemUnitClassLib> systemUnitClassLibMap= new HashMap<>();
+
+    private Map<String, InstanceHierarchy> instanceHierarchyMap= new HashMap<>();
 
     public void parseAml(String path) {
         parse(".\\XmlParserService\\src\\main\\resources\\Topology.aml");
@@ -125,8 +131,24 @@ public class AmlParserService {
                     opcUaXml.appendChild(systemUnitClassElement);
                 }
             }
-//            //4.解析实例层次
-//            Node instanceHierarchy = basicObjectTypeMap.get(CAEXFileBasicObjectTypeEnum.INSTANCEHIERARCHY.getName());
+
+          //4.解析实例层次
+            NodeList instanceHierarchyList = d.getElementsByTagName(INSTANCEHIERARCHY);
+            // 4.1初始化内部数据结构
+            for(int j = 0;j<instanceHierarchyList.getLength();j++){
+                parseInstanceHierarchy(instanceHierarchyList.item(j));
+            }
+            // 3.2构造输出Element
+            for(Map.Entry<String,InstanceHierarchy> entry:instanceHierarchyMap.entrySet()) {
+                String instanceHierarchyName = entry.getKey();
+                InstanceHierarchy instanceHierarchy = entry.getValue();
+                // 遍历每个Element
+                for(Map.Entry<String,InternalElement> instanceElementEntry : instanceHierarchy.getInternalElementMap().entrySet()){
+                    InternalElement internalElement = instanceElementEntry.getValue();
+                    Element internalXmlElement= buildInternalXmlElement(internalElement);
+                    opcUaXml.appendChild(internalXmlElement);
+                }
+            }
 
             // 写入文件
             exportElementToFile(opcUaXml,"Topology.xml");
@@ -135,6 +157,90 @@ public class AmlParserService {
         }
     }
 
+    private Element buildInternalXmlElement(InternalElement internalElement){
+        String name = internalElement.getAttributes().get(NAME);
+
+        // 2. 写Element相关
+        Element element = dom.createElement(UAOBJECT);
+        // 设置属性
+        element.setAttribute(BROWSENAME, name);
+        String nodeId = generateNodeId();
+        element.setAttribute(NODEID, nodeId);
+        // 一级子节点 displayName
+        Element displayNameBean = buildBeanValue(DISPLAYNAME, name);
+        element.appendChild(displayNameBean);
+        // 一级子节点References
+        Element refersEle = dom.createElement(REFERENCES);
+        // ExternalInterface
+        if(internalElement.getExternalInterfaceAttributes().size() > 0 ){
+            String objectName = internalElement.getExternalInterfaceAttributes().get(NAME);
+            String refBaseClassPath = internalElement.getExternalInterfaceAttributes().get(REFBASECLASSPATH);
+            String[] refPath = refBaseClassPath.split("/");
+            String interfaceClassLibName = refPath[0];
+            String interfaceClassName = refPath[1];
+            String refNodeId = interfaceClassLibMap.get(interfaceClassLibName).getInterfaceClassAttributes().get(interfaceClassName).get(NODEID);
+            // 根据接口创建EnergySupply对象节点，及其引用
+            String objectNodeId = buildObjectByInterface(refNodeId,element.getAttribute(NODEID),objectName,internalElement.getExternalInterfaceAttributes());
+            //创建ElectricScrewdriver的引用
+            Element ref = dom.createElement(REFERENCE);
+            ref.setAttribute(REFERENCETYPE, RelationReferenceMapping.getMap().get(RelationEnum.EXTERNALINTERFACE.getName()));
+            ref.setTextContent(objectNodeId);
+            refersEle.appendChild(ref);
+        }
+
+        // SupportedRoleClass
+        if(internalElement.getSupportedRoleClassAttributes().size() > 0 ){
+            String refRoleClassPath = internalElement.getSupportedRoleClassAttributes().get(REFROLECLASSPATH);
+            String[] refPath = refRoleClassPath.split("/");
+            String roleClassLibName = refPath[0];
+            String roleClassName = refPath[1];
+            String refNodeId = roleClassLibMap.get(roleClassLibName).getRoleClassAttributes().get(roleClassName).get(NODEID);
+            //创建ElectricScrewdriver的引用
+            Element ref = dom.createElement(REFERENCE);
+            ref.setAttribute(REFERENCETYPE, RelationReferenceMapping.getMap().get(RelationEnum.SUPPORTEDROLECLASS.getName()));
+            ref.setTextContent(refNodeId);
+            refersEle.appendChild(ref);
+        }
+
+        // newAttribute
+        for (Map.Entry<String, Map<String,String>> entry :  internalElement.getNewAttributeMap().entrySet()) {
+            String newAttributeName = entry.getKey();
+            Map<String,String> newAttributeMessageMap = entry.getValue();
+            String refNodeId = buildNewVariableNode(newAttributeMessageMap.get(NAME),newAttributeMessageMap.get(VALUE)!=null?newAttributeMessageMap.get(VALUE):"",nodeId);
+            Element ref = dom.createElement(REFERENCE);
+            ref.setAttribute(REFERENCETYPE, ReferenceEnum.HASCOMPONENT.getName());
+            ref.setTextContent(refNodeId);
+            refersEle.appendChild(ref);
+        }
+
+
+        // attributes
+        for (Map.Entry<String, String> entry : internalElement.getAttributes().entrySet()) {
+            String key = entry.getKey();
+            if(!key.equals(NAME)&&!key.equals(REFBASECLASSPATH)&&!key.equals(REFBASESYSTEMUNITPATH)){
+                String variableNodeId = buildPropertyNode(entry.getKey(),entry.getValue(),nodeId);
+                Element refVariable = dom.createElement(REFERENCE);
+                refVariable.setAttribute(REFERENCETYPE, ReferenceEnum.HASPROPERTY.getName());
+                refVariable.setTextContent(variableNodeId);
+                refersEle.appendChild(refVariable);
+            }else if(key.equals(REFBASESYSTEMUNITPATH)){
+                String refBaseSystemUnitPath =entry.getValue();
+                String[] refPath = refBaseSystemUnitPath.split("/");
+                String systemUnitClassLibName = refPath[0];
+                String systemUnitClassName = refPath[1];
+                String refNodeId = systemUnitClassLibMap.get(systemUnitClassLibName).getSystemUnitClassMap().get(systemUnitClassName).getAttributesMap().get(NODEID);
+                Element ref = dom.createElement(REFERENCE);
+                ref.setAttribute(REFERENCETYPE, ReferenceEnum.HASTYPEDEFINITION.getName());
+                ref.setTextContent(refNodeId);
+                refersEle.appendChild(ref);
+            }
+        }
+
+        // roleRequirements暂不解析
+
+        element.appendChild(refersEle);
+        return element;
+    }
     private void parseRoleClassLib(Node roleClassLibNode) {
         NamedNodeMap attributes = roleClassLibNode.getAttributes();
         RoleClassLib roleClassLib = new RoleClassLib();
@@ -224,6 +330,67 @@ public class AmlParserService {
             }
         }
         systemUnitClassLibMap.put(systemUnitClassLib.getAttributes().get(NAME),systemUnitClassLib);
+    }
+
+    private void parseInstanceHierarchy(Node instanceHierarchyNode) {
+        NamedNodeMap attributes = instanceHierarchyNode.getAttributes();
+        InstanceHierarchy instanceHierarchy = new InstanceHierarchy();
+        // 1.属性
+        for (int i = 0; i < attributes.getLength(); i++) {
+            instanceHierarchy.getAttributes().put(attributes.item(i).getNodeName(),attributes.item(i).getNodeValue());
+        }
+        // 2.版本和RoleClass
+        for (int j = 0; j < instanceHierarchyNode.getChildNodes().getLength(); j++) {
+            Node internalElementNode = instanceHierarchyNode.getChildNodes().item(j);
+            if (internalElementNode.getNodeType() == Node.ELEMENT_NODE && INTERNALELEMENT.equals(internalElementNode.getNodeName())) {
+                // 解析internalElement
+                InternalElement internalElement = buildInternalElement(internalElementNode);
+                instanceHierarchy.getInternalElementMap().put(internalElement.getAttributes().get(NAME),internalElement);
+            }
+        }
+        instanceHierarchyMap.put(instanceHierarchy.getAttributes().get(NAME),instanceHierarchy);
+    }
+
+    private InternalElement buildInternalElement(Node internalElementNode) {
+        NamedNodeMap attributes = internalElementNode.getAttributes();
+        InternalElement internalElement = new InternalElement();
+        // 1.构造工程类相关
+        // 1.1.属性
+        for (int i = 0; i < attributes.getLength(); i++) {
+            internalElement.getAttributes().put(attributes.item(i).getNodeName(),attributes.item(i).getNodeValue());
+        }
+        // 1.2.SupportedRoleClass、ExternalInterface、NewAttribute和RoleRequirements
+        for (int j = 0; j < internalElementNode.getChildNodes().getLength(); j++) {
+            Node sonOfInternalElementNode = internalElementNode.getChildNodes().item(j);
+            if (EXTERNALINTERFACE.equals(sonOfInternalElementNode.getNodeName())) {
+                for (int i = 0; i < sonOfInternalElementNode.getAttributes().getLength(); i++) {
+                    internalElement.getExternalInterfaceAttributes().put(
+                            sonOfInternalElementNode.getAttributes().item(i).getNodeName()
+                            , sonOfInternalElementNode.getAttributes().item(i).getNodeValue());
+                }
+            }else if(SUPPORTEDROLECLASS.equals(sonOfInternalElementNode.getNodeName())){
+                for (int i = 0; i < sonOfInternalElementNode.getAttributes().getLength(); i++) {
+                    internalElement.getSupportedRoleClassAttributes().put(
+                            sonOfInternalElementNode.getAttributes().item(i).getNodeName()
+                            , sonOfInternalElementNode.getAttributes().item(i).getNodeValue());
+                }
+            }else if(ATTRIBUTE.equals(sonOfInternalElementNode.getNodeName())){
+                Map<String,String> attributeMap = new HashMap<>();
+                for (int i = 0; i < sonOfInternalElementNode.getAttributes().getLength(); i++) {
+                    attributeMap.put(
+                            sonOfInternalElementNode.getAttributes().item(i).getNodeName()
+                            , sonOfInternalElementNode.getAttributes().item(i).getNodeValue());
+                }
+                internalElement.getNewAttributeMap().put(attributeMap.get(NAME),attributeMap);
+            } else if(ROLEREQUIREMENTS.equals(sonOfInternalElementNode.getNodeName())){
+                for (int i = 0; i < sonOfInternalElementNode.getAttributes().getLength(); i++) {
+                    internalElement.getRoleRequirementsAttributes().put(
+                            sonOfInternalElementNode.getAttributes().item(i).getNodeName()
+                            , sonOfInternalElementNode.getAttributes().item(i).getNodeValue());
+                }
+            }
+        }
+        return internalElement;
     }
 
     private void initOpcUaXml() throws ParserConfigurationException {
@@ -419,6 +586,42 @@ public class AmlParserService {
         Element ref = dom.createElement(REFERENCE);
         ref.setAttribute(REFERENCETYPE,ReferenceEnum.HASTYPEDEFINITION.getName());
         ref.setTextContent("i=68");
+        refersEle.appendChild(ref);
+        variable.appendChild(refersEle);
+        opcUaXml.appendChild(variable);
+        return nodeId;
+    }
+
+    private String buildNewVariableNode(String name, String value, String parentNodeId){
+        String nodeId = generateNodeId();
+
+        Element variable = dom.createElement(UAVARIABLE);
+        variable.setAttribute(NODEID, nodeId);
+        variable.setAttribute(BROWSENAME,name);
+        variable.setAttribute(PARENTNODEID, parentNodeId);
+        Element displayName = buildBeanValue(DISPLAYNAME,name);
+        variable.appendChild(displayName);
+        Element valueData;
+        HashMap<String, String> valueAttribute = new HashMap<String, String>();
+        valueAttribute.put("xmlns", "http://opcfoundation.org/UA/2008/02/Types.xsd");
+        if(DataValidate.isInteger(value)){
+            variable.setAttribute(DATATYPE, UADataTypeEnum.INT.getName());
+            valueData = buildBeanAttributeValue(UADataTypeEnum.INT.getName(),value,valueAttribute);
+        }else if(DataValidate.isDouble(value)){
+            variable.setAttribute(DATATYPE, UADataTypeEnum.DOUBLE.getName());
+            valueData = buildBeanAttributeValue(UADataTypeEnum.DOUBLE.getName(),value,valueAttribute);
+        }else{
+            variable.setAttribute(DATATYPE, UADataTypeEnum.STRING.getName());
+            valueData = buildBeanAttributeValue(UADataTypeEnum.STRING.getName(), value,valueAttribute);
+        }
+        Element valueBean = dom.createElement(VALUE);
+        valueBean.appendChild(valueData);
+        variable.appendChild(valueBean);
+
+        Element refersEle = dom.createElement(REFERENCES);
+        Element ref = dom.createElement(REFERENCE);
+        ref.setAttribute(REFERENCETYPE,ReferenceEnum.HASTYPEDEFINITION.getName());
+        ref.setTextContent("i=63");
         refersEle.appendChild(ref);
         variable.appendChild(refersEle);
         opcUaXml.appendChild(variable);

@@ -12,19 +12,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6f10e0fb-2d1a-4e98-ac22-881755e620b8" name="Changes" comment="第一次提交">
+    <list default="true" id="6f10e0fb-2d1a-4e98-ac22-881755e620b8" name="Changes" comment="還剩解析實例層次">
+      <change afterPath="$PROJECT_DIR$/XmlParserService/src/main/java/org/imc/aml/model/InstanceHierarchy.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/XmlParserService/src/main/java/org/imc/aml/model/InternalElement.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/XmlParserService/src/main/java/org/imc/aml/model/InterfaceClassLib.java" beforeDir="false" afterPath="$PROJECT_DIR$/XmlParserService/src/main/java/org/imc/aml/model/InterfaceClassLib.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/XmlParserService/src/main/java/org/imc/aml/model/SystemUnitClass.java" beforeDir="false" afterPath="$PROJECT_DIR$/XmlParserService/src/main/java/org/imc/aml/model/SystemUnitClass.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/XmlParserService/src/main/java/org/imc/aml/model/SystemUnitClassLib.java" beforeDir="false" afterPath="$PROJECT_DIR$/XmlParserService/src/main/java/org/imc/aml/model/SystemUnitClassLib.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/XmlParserService/src/main/java/org/imc/aml/model/mapping/ReferenceMapping.java" beforeDir="false" afterPath="$PROJECT_DIR$/XmlParserService/src/main/java/org/imc/aml/model/mapping/RelationReferenceMapping.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/XmlParserService/src/main/java/org/imc/service/AmlParserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/XmlParserService/src/main/java/org/imc/service/AmlParserService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/XmlParserService/src/main/resources/Topology.xml" beforeDir="false" afterPath="$PROJECT_DIR$/XmlParserService/src/main/resources/Topology.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/XmlParserService/target/classes/Topology.xml" beforeDir="false" afterPath="$PROJECT_DIR$/XmlParserService/target/classes/Topology.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/XmlParserService/target/classes/org/imc/aml/model/InterfaceClassLib.class" beforeDir="false" afterPath="$PROJECT_DIR$/XmlParserService/target/classes/org/imc/aml/model/InterfaceClassLib.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/XmlParserService/target/classes/org/imc/aml/model/SystemUnitClass.class" beforeDir="false" afterPath="$PROJECT_DIR$/XmlParserService/target/classes/org/imc/aml/model/SystemUnitClass.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/XmlParserService/target/classes/org/imc/aml/model/SystemUnitClassLib.class" beforeDir="false" afterPath="$PROJECT_DIR$/XmlParserService/target/classes/org/imc/aml/model/SystemUnitClassLib.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/XmlParserService/target/classes/org/imc/aml/model/mapping/ReferenceMapping.class" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/XmlParserService/target/classes/org/imc/service/AmlParserService.class" beforeDir="false" afterPath="$PROJECT_DIR$/XmlParserService/target/classes/org/imc/service/AmlParserService.class" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -45,6 +38,14 @@
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitSEFilterConfiguration">
+    <file-type-list>
+      <filtered-out-file-type name="LOCAL_BRANCH" />
+      <filtered-out-file-type name="REMOTE_BRANCH" />
+      <filtered-out-file-type name="TAG" />
+      <filtered-out-file-type name="COMMIT_BY_MESSAGE" />
+    </file-type-list>
   </component>
   <component name="ProjectId" id="1y7dviWOv9wvtPhU7cWpEhMAnrx" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
@@ -91,10 +92,10 @@
       <recent name="org.imc.service" />
     </key>
     <key name="CopyClassDialog.RECENTS_KEY">
+      <recent name="org.imc.aml.model" />
       <recent name="org.imc.dubbo.impl" />
       <recent name="org.imc.dubbo" />
       <recent name="org.imc.aml.model.enums" />
-      <recent name="org.imc.aml.model" />
       <recent name="org.imc.service" />
     </key>
   </component>
@@ -209,7 +210,8 @@
       <workItem from="1632445286354" duration="17205000" />
       <workItem from="1632472698032" duration="1762000" />
       <workItem from="1632474692452" duration="3143000" />
-      <workItem from="1632479598160" duration="6051000" />
+      <workItem from="1632479598160" duration="6166000" />
+      <workItem from="1632620405556" duration="7081000" />
     </task>
     <task id="LOCAL-00001" summary="第一次提交">
       <created>1632474358259</created>
@@ -218,7 +220,14 @@
       <option name="project" value="LOCAL" />
       <updated>1632474358259</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="還剩解析實例層次">
+      <created>1632487212015</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1632487212015</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -238,6 +247,7 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="第一次提交" />
-    <option name="LAST_COMMIT_MESSAGE" value="第一次提交" />
+    <MESSAGE value="還剩解析實例層次" />
+    <option name="LAST_COMMIT_MESSAGE" value="還剩解析實例層次" />
   </component>
 </project>
