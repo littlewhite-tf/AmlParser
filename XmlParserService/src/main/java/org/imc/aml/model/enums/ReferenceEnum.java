@@ -20,7 +20,12 @@ public enum ReferenceEnum {
     /**
      * 有属性
      */
-    HASPROPERTY("HasProperty");
+    HASPROPERTY("HasProperty"),
+
+    /**
+     * 有属性
+     */
+    ORGANIZES("Organizes");
 
     private String name;
 

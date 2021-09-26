@@ -1,6 +1,5 @@
 package org.imc.service;
 
-import org.apache.tomcat.util.buf.StringUtils;
 import org.imc.aml.model.*;
 import org.imc.aml.model.enums.ReferenceEnum;
 import org.imc.aml.model.enums.RelationEnum;
@@ -21,6 +20,8 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.File;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 @Component
@@ -48,6 +49,7 @@ public class AmlParserService {
     private static final String REFERENCE="Reference";
     private static final String VALUE="Value";
     private static final String REFERENCETYPE= "ReferenceType";
+    private static final String ISFORWARD= "IsForward";
     private static final String NODEID = "NodeId";
     private static final String DISPLAYNAME = "DisplayName";
     private static final String UANODESET = "UANodeSet";
@@ -59,6 +61,8 @@ public class AmlParserService {
     private static final String REFROLECLASSPATH="RefRoleClassPath";
     private static final String REFBASESYSTEMUNITPATH ="RefBaseSystemUnitPath";
     private static final String ROLEREQUIREMENTS="RoleRequirements";
+    private static final String FALSE="false";
+
 
     private static int i;
     private static int ns = 2;
@@ -75,6 +79,8 @@ public class AmlParserService {
     private Map<String, SystemUnitClassLib> systemUnitClassLibMap= new HashMap<>();
 
     private Map<String, InstanceHierarchy> instanceHierarchyMap= new HashMap<>();
+
+    private Map<String,Element> instanceDirectoryMap = new HashMap<>();
 
     public void parseAml(String path) {
         parse(".\\XmlParserService\\src\\main\\resources\\Topology.aml");
@@ -339,11 +345,29 @@ public class AmlParserService {
         for (int i = 0; i < attributes.getLength(); i++) {
             instanceHierarchy.getAttributes().put(attributes.item(i).getNodeName(),attributes.item(i).getNodeValue());
         }
-        // 2.版本和RoleClass
+        String instanceDirectoryId = generateNodeId();
+        List<ReferenceElement> references = new LinkedList<>();
+        ReferenceElement referenceElement = new ReferenceElement();
+        referenceElement.setValue("ns=1;i=5005");
+        referenceElement.getAttributes().put(REFERENCETYPE,ReferenceEnum.ORGANIZES.getName());
+        referenceElement.getAttributes().put(ISFORWARD,FALSE);
+        references.add(referenceElement);
+        ReferenceElement referenceElement1 = new ReferenceElement();
+        referenceElement1.setValue("ns=2;i=25");
+        referenceElement1.getAttributes().put(REFERENCETYPE,ReferenceEnum.HASCOMPONENT.getName());
+        referenceElement1.getAttributes().put(ISFORWARD,FALSE);
+        references.add(referenceElement1);
+        ReferenceElement referenceElement2 = new ReferenceElement();
+        referenceElement2.setValue("i=61");
+        referenceElement2.getAttributes().put(REFERENCETYPE,ReferenceEnum.HASTYPEDEFINITION.getName());
+        references.add(referenceElement2);
+        Element instanceDirectory = buildElementByCondition(instanceDirectoryId,instanceHierarchy.getAttributes().get(NAME), references);
+        instanceDirectoryMap.put(instanceHierarchy.getAttributes().get(NAME),instanceDirectory);
+
+        // 2.解析internalElement
         for (int j = 0; j < instanceHierarchyNode.getChildNodes().getLength(); j++) {
             Node internalElementNode = instanceHierarchyNode.getChildNodes().item(j);
             if (internalElementNode.getNodeType() == Node.ELEMENT_NODE && INTERNALELEMENT.equals(internalElementNode.getNodeName())) {
-                // 解析internalElement
                 InternalElement internalElement = buildInternalElement(internalElementNode);
                 instanceHierarchy.getInternalElementMap().put(internalElement.getAttributes().get(NAME),internalElement);
             }
@@ -660,4 +684,24 @@ public class AmlParserService {
         tf.transform(new DOMSource(element), new StreamResult(new File(".\\XmlParserService\\src\\main\\resources\\"+fileName)));
     }
 
+    Element buildElementByCondition(String nodeId,String name,List<ReferenceElement> referenceElementList){
+         Element objectElement   =dom.createElement(UAOBJECT);
+        objectElement.setAttribute(NODEID,nodeId);
+        objectElement.setAttribute(BROWSENAME,name);
+        Element displayName   =dom.createElement(DISPLAYNAME);
+        displayName.setTextContent(name);
+        objectElement.appendChild(displayName);
+        Element refs   =dom.createElement(REFERENCES);
+
+        for(ReferenceElement referenceElement:referenceElementList){
+            Element ref   =dom.createElement(REFERENCE);
+            ref.setTextContent(referenceElement.getValue());
+            for(Map.Entry<String,String> entry:referenceElement.getAttributes().entrySet()){
+                ref.setAttribute(entry.getKey(),entry.getValue());
+            }
+            refs.appendChild(ref);
+        }
+        objectElement.appendChild(refs);
+        return objectElement;
+    }
 }
