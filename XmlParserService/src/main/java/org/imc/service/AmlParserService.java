@@ -778,7 +778,6 @@ public class AmlParserService {
         addAliase(aliases, mp,"Duration",290);
 
         // 注意，已经定义的对象其实是对象的引用，重新指向新的一个对象，则失去了原对象的操作权力
-        //todo 把其它aliases加进来
 
         opcUaXml.appendChild(aliases);
     }
