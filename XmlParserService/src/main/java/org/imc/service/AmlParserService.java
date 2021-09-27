@@ -134,12 +134,40 @@ public class AmlParserService {
             }
             // 3.2构造输出Element
             for(Map.Entry<String,SystemUnitClassLib> entry:systemUnitClassLibMap.entrySet()) {
-                String interfaceClassLibName = entry.getKey();
+                String systemUnitClassLibName = entry.getKey();
                 SystemUnitClassLib systemUnitClassLib = entry.getValue();
+                Element systemUnitClassLibElement = dom.createElement(UAOBJECT);
+                String systemUnitClassNodeId = generateNodeId();
+                systemUnitClassLibElement.setAttribute(NODEID,systemUnitClassNodeId);
+                systemUnitClassLibElement.setAttribute(BROWSENAME,systemUnitClassLibName);
+                Element display = buildBeanValue(DISPLAYNAME,systemUnitClassLibName);
+                systemUnitClassLibElement.appendChild(display);
+                Element refs = dom.createElement(REFERENCES);
+                Element ref = dom.createElement(REFERENCE);
+                ref.setAttribute(REFERENCETYPE,ReferenceEnum.HASTYPEDEFINITION.getName());
+                ref.setTextContent("i=61");
+                refs.appendChild(ref);
+                Element ref1 = dom.createElement(REFERENCE);
+                ref1.setAttribute(REFERENCETYPE,ReferenceEnum.ORGANIZES.getName());
+                ref1.setAttribute(ISFORWARD,FALSE);
+                ref1.setTextContent("ns=1;i=5010");
+                refs.appendChild(ref1);
+                Map<String,String> addRefMap = new HashMap<>(         );
+                addRefMap.put(REFERENCETYPE,ReferenceEnum.HASCOMPONENT.getName());
+                String version = systemUnitClassLib.getVersion();
+                String variableNodeId = buildPropertyNode(VERSION,version,systemUnitClassNodeId);
+                Element ref2 = dom.createElement(REFERENCE);
+                ref2.setAttribute(REFERENCETYPE,ReferenceEnum.HASPROPERTY.getName());
+                ref2.setTextContent(variableNodeId);
+                refs.appendChild(ref2);
+                systemUnitClassLibElement.appendChild(refs);
+                opcUaXml.appendChild(systemUnitClassLibElement);
+                addReference(systemUnitClassLibsDirectory,systemUnitClassNodeId,addRefMap);
+
                 for(Map.Entry<String,SystemUnitClass> systemUnitClassEntry:systemUnitClassLib.getSystemUnitClassMap().entrySet()){
                     String systemUnitClassName = systemUnitClassEntry.getKey();
                     SystemUnitClass systemUnitClass = systemUnitClassEntry.getValue();
-                    Element systemUnitClassElement= buildSystemUnitClassElement(systemUnitClass);
+                    Element systemUnitClassElement= buildSystemUnitClassElement(systemUnitClass,systemUnitClassLibElement);
                     opcUaXml.appendChild(systemUnitClassElement);
                 }
             }
@@ -524,11 +552,11 @@ public class AmlParserService {
         opcUaXml.appendChild(topologyElement);
         initInterfaceClassLibsDirectory(topologyNodeId);
         opcUaXml.appendChild(interfaceClassLibsDirectory);
-
-        systemUnitClassLibsDirectory = dom.createElement(UAOBJECT);
+        initSystemUnitClassLibsDirectory(topologyNodeId);
+        opcUaXml.appendChild(systemUnitClassLibsDirectory);
         roleClassLibsDirectory = dom.createElement(UAOBJECT);
 
-        opcUaXml.appendChild(systemUnitClassLibsDirectory);
+
         opcUaXml.appendChild(roleClassLibsDirectory);
     }
 
@@ -577,6 +605,32 @@ public class AmlParserService {
         Map<String,String> addReferenceMap = new HashMap<>();
         addReferenceMap.put(REFERENCETYPE,ReferenceEnum.HASCOMPONENT.getName());
         addReference(topologyElement,interfaceClassLibsNode,addReferenceMap);
+    }
+
+    private void initSystemUnitClassLibsDirectory(String topologyNodeId) {
+        systemUnitClassLibsDirectory = dom.createElement(UAOBJECT);
+        String systemUnitClassLibsNodeId = generateNodeId();
+        systemUnitClassLibsDirectory.setAttribute(NODEID,systemUnitClassLibsNodeId);
+        systemUnitClassLibsDirectory.setAttribute(BROWSENAME,"SystemUnitClassLibs");
+        systemUnitClassLibsDirectory.setAttribute(PARENTNODEID,topologyNodeId);
+        Element interfaceClassLibsDisplayName  = buildBeanValue(DISPLAYNAME,"SystemUnitClassLibs");
+        systemUnitClassLibsDirectory.appendChild(interfaceClassLibsDisplayName);
+
+        Element systemUnitClassLibsRefs  = dom.createElement(REFERENCES);
+        Element systemUnitClassLibsRef = dom.createElement(REFERENCE);
+        systemUnitClassLibsRef.setAttribute(REFERENCETYPE,ReferenceEnum.HASCOMPONENT.getName());
+        systemUnitClassLibsRef.setAttribute(ISFORWARD,FALSE);
+        systemUnitClassLibsRef.setTextContent(topologyNodeId);
+        systemUnitClassLibsRefs.appendChild(systemUnitClassLibsRef);
+        Element systemUnitClassLibsRef1 = dom.createElement(REFERENCE);
+        systemUnitClassLibsRef1.setAttribute(REFERENCETYPE,ReferenceEnum.HASTYPEDEFINITION.getName());
+        systemUnitClassLibsRef1.setTextContent("i=61");
+        systemUnitClassLibsRefs.appendChild(systemUnitClassLibsRef1);
+        systemUnitClassLibsDirectory.appendChild(systemUnitClassLibsRefs);
+
+        Map<String,String> addReferenceMap = new HashMap<>();
+        addReferenceMap.put(REFERENCETYPE,ReferenceEnum.HASCOMPONENT.getName());
+        addReference(topologyElement,systemUnitClassLibsNodeId,addReferenceMap);
     }
 
     private void appendAliases(){
@@ -636,7 +690,8 @@ public class AmlParserService {
         }
         return systemUnitClass;
     }
-     private Element buildSystemUnitClassElement(SystemUnitClass systemUnitClass){
+     private Element buildSystemUnitClassElement(SystemUnitClass systemUnitClass,Element systemUnitClassLibElement){
+
          String name = systemUnitClass.getAttributesMap().get(NAME);
 
          // 2. 写Element相关
@@ -681,6 +736,10 @@ public class AmlParserService {
              refersEle.appendChild(ref);
          }
          element.appendChild(refersEle);
+
+         Map<String,String> addRefMap = new HashMap<>();
+         addRefMap.put(REFERENCETYPE,"ns=1;i=4002");
+         addReference(systemUnitClassLibElement,nodeId,addRefMap);
          return element;
      }
 
