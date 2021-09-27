@@ -65,6 +65,7 @@
     <Reference ReferenceType="HasComponent">ns=2;i=2</Reference>
 </References>
 </UAObject>
+
 <UAVariable NodeId="ns=2;i=3" BrowseName="Version" ParentNodeId="ns=2;i=2" DataType="String">
 <DisplayName>Version</DisplayName>
 <References>
@@ -124,17 +125,5 @@
     <Reference ReferenceType="Organizes" IsForward="false">ns=1;i=5008</Reference>
     <Reference ReferenceType="HasComponent" IsForward="false">ns=2;i=28</Reference>
     <Reference ReferenceType="ns=1;i=4002">ns=2;i=17</Reference>
-</References>
-</UAObject>
-
-<UAObject NodeId="ns=2;i=1" BrowseName="ManufacturingSystem">
-<DisplayName>ManufacturingSystem</DisplayName>
-<Description/>
-<References>
-    <Reference ReferenceType="HasTypeDefinition">i=61</Reference>
-    <Reference ReferenceType="Organizes" IsForward="false">ns=1;i=5005</Reference>
-    <Reference ReferenceType="HasComponent" IsForward="false">ns=2;i=25</Reference>
-    <Reference ReferenceType="HasComponent">ns=2;i=8</Reference>
-    <Reference ReferenceType="HasComponent">ns=2;i=10</Reference>
 </References>
 </UAObject>

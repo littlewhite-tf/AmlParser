@@ -82,6 +82,10 @@ public class AmlParserService {
 
     private Map<String,Element> instanceDirectoryMap = new HashMap<>();
 
+    private Element interfaceClassLibsDirectory ;
+    private Element systemUnitClassLibsDirectory ;
+    private Element roleClassLibsDirectory ;
+
     public void parseAml(String path) {
         parse(".\\XmlParserService\\src\\main\\resources\\Topology.aml");
         return;
@@ -148,10 +152,11 @@ public class AmlParserService {
             for(Map.Entry<String,InstanceHierarchy> entry:instanceHierarchyMap.entrySet()) {
                 String instanceHierarchyName = entry.getKey();
                 InstanceHierarchy instanceHierarchy = entry.getValue();
+                Element instanceDirectory  = instanceDirectoryMap.get(instanceHierarchyName);
                 // 遍历每个Element
                 for(Map.Entry<String,InternalElement> instanceElementEntry : instanceHierarchy.getInternalElementMap().entrySet()){
                     InternalElement internalElement = instanceElementEntry.getValue();
-                    Element internalXmlElement= buildInternalXmlElement(internalElement);
+                    Element internalXmlElement= buildInternalXmlElement(internalElement,instanceDirectory);
                     opcUaXml.appendChild(internalXmlElement);
                 }
             }
@@ -163,14 +168,27 @@ public class AmlParserService {
         }
     }
 
-    private Element buildInternalXmlElement(InternalElement internalElement){
+    private Element buildInternalXmlElement(InternalElement internalElement,Element instanceDirectory){
+        String nodeId = generateNodeId();
+        Node directoryRefs=dom.createElement(REFERENCES);
+        for(int j =0;j<instanceDirectory.getChildNodes().getLength();j++){
+            if(REFERENCES.equals(instanceDirectory.getChildNodes().item(j).getNodeName())){
+                directoryRefs = instanceDirectory.getChildNodes().item(j);
+            }
+        }
+        Element directoryRef = dom.createElement(REFERENCE);
+        directoryRef.setAttribute(REFERENCETYPE, ReferenceEnum.HASCOMPONENT.getName());
+        directoryRef.setTextContent(nodeId);
+        directoryRefs.appendChild(directoryRef);
+        instanceDirectory.appendChild(directoryRefs);
+
+
         String name = internalElement.getAttributes().get(NAME);
 
         // 2. 写Element相关
         Element element = dom.createElement(UAOBJECT);
         // 设置属性
         element.setAttribute(BROWSENAME, name);
-        String nodeId = generateNodeId();
         element.setAttribute(NODEID, nodeId);
         // 一级子节点 displayName
         Element displayNameBean = buildBeanValue(DISPLAYNAME, name);
@@ -302,18 +320,75 @@ public class AmlParserService {
                 }
                 interfaceClassLib.getInterfaceClassAttributes().put(attributeMap.get(NAME),attributeMap);
             }else if(interfaceClassNode.getNodeType() == Node.ELEMENT_NODE && VERSION.equals(interfaceClassNode.getNodeName())){
-                interfaceClassLib.setVersion(interfaceClassNode.getNodeValue());
+                interfaceClassLib.setVersion(interfaceClassNode.getTextContent());
             }
         }
         interfaceClassLibMap.put(interfaceClassLib.getAttributes().get(NAME),interfaceClassLib);
     }
 
     private void buildInterface(InterfaceClassLib interfaceClassLib,String interfaceName) {
+        String interfaceNodeId = generateNodeId();
+        Element interfaceElement = dom.createElement(UAOBJECT);
+        interfaceElement.setAttribute(NODEID,interfaceNodeId);
+        interfaceElement.setAttribute(BROWSENAME,interfaceName);
+        Element displayName = buildBeanValue(DISPLAYNAME,interfaceName);
+        interfaceElement.appendChild(displayName);
+        Element refs = dom.createElement(REFERENCES);
+        Element ref = dom.createElement(REFERENCE);
+        ref.setAttribute(REFERENCETYPE,ReferenceEnum.HASTYPEDEFINITION.getName());
+        ref.setTextContent("i=61");
+        refs.appendChild(ref);
+        Element ref1 = dom.createElement(REFERENCE);
+        ref1.setAttribute(REFERENCETYPE,ReferenceEnum.ORGANIZES.getName());
+        ref1.setAttribute(ISFORWARD,FALSE);
+        ref1.setTextContent("ns=1;i=5008");
+        refs.appendChild(ref1);
+        for(int j = 0;j<interfaceClassLibsDirectory.getAttributes().getLength();j++){
+            if(NODEID.equals(interfaceClassLibsDirectory.getAttributes().item(j).getNodeName())){
+                String interfaceClassLibsDirectoryNodeId = interfaceClassLibsDirectory.getAttributes().item(j).getNodeValue();
+                Element ref2 = dom.createElement(REFERENCE);
+                ref2.setAttribute(REFERENCETYPE,ReferenceEnum.HASCOMPONENT.getName());
+                ref2.setAttribute(ISFORWARD,FALSE);
+                ref2.setTextContent(interfaceClassLibsDirectoryNodeId);
+                refs.appendChild(ref2);
+            }
+        }
+        String versionNodeId = buildPropertyNode(VERSION,interfaceClassLib.getVersion(),interfaceNodeId);
+        Element ref3 = dom.createElement(REFERENCE);
+        ref3.setAttribute(REFERENCETYPE,ReferenceEnum.HASPROPERTY.getName());
+        ref3.setTextContent(versionNodeId);
+        refs.appendChild(ref3);
+        interfaceElement.appendChild(refs);
+        Map<String,String> interfaceClassLibRefAddMap =new HashMap<>();
+        interfaceClassLibRefAddMap.put(REFERENCETYPE,ReferenceEnum.HASCOMPONENT.getName());
+        addReference(interfaceClassLibsDirectory,interfaceNodeId,interfaceClassLibRefAddMap);
+
         for(Map.Entry<String,Map<String,String>> entry:interfaceClassLib.getInterfaceClassAttributes().entrySet()){
             String interfaceClassName = entry.getKey();
             Map<String,String> interfaceClassAttributes = entry.getValue();
             Element element = buildObjectTypeXml(interfaceClassName,interfaceClassAttributes);
+            Map<String,String> refAttributeMap = new HashMap<>();
+            refAttributeMap.put(REFERENCETYPE,"ns=1;i=4002");
+            for (int i = 0; i < element.getAttributes().getLength(); i++) {
+                if(NODEID.equals(element.getAttributes().item(i).getNodeName())){
+                    addReference(interfaceElement,element.getAttributes().item(i).getNodeValue(),refAttributeMap);
+                }
+            }
             opcUaXml.appendChild(element);
+        }
+        opcUaXml.appendChild(interfaceElement);
+    }
+
+    private void addReference(Element targetElement,String refValue,Map<String,String> refAttributeMap){
+        for(int j = 0;j<targetElement.getChildNodes().getLength();j++){
+            if(REFERENCES.equals(targetElement.getChildNodes().item(j).getNodeName())){
+                Element ref = dom.createElement(REFERENCE);
+                ref.setTextContent(refValue);
+                for(Map.Entry<String,String> entry:refAttributeMap.entrySet()){
+                    ref.setAttribute(entry.getKey(),entry.getValue());
+                }
+                targetElement.getChildNodes().item(j).appendChild(ref);
+            }
         }
     }
 
@@ -362,6 +437,8 @@ public class AmlParserService {
         referenceElement2.getAttributes().put(REFERENCETYPE,ReferenceEnum.HASTYPEDEFINITION.getName());
         references.add(referenceElement2);
         Element instanceDirectory = buildElementByCondition(instanceDirectoryId,instanceHierarchy.getAttributes().get(NAME), references);
+        // 添加的目录是其引用
+        opcUaXml.appendChild(instanceDirectory);
         instanceDirectoryMap.put(instanceHierarchy.getAttributes().get(NAME),instanceDirectory);
 
         // 2.解析internalElement
@@ -439,6 +516,39 @@ public class AmlParserService {
 
         // 3.Alias
         appendAliases();
+
+        // 4.Directories
+
+        initInterfaceClassLibsDirectory();
+        systemUnitClassLibsDirectory = dom.createElement(UAOBJECT);
+        roleClassLibsDirectory = dom.createElement(UAOBJECT);
+
+        opcUaXml.appendChild(interfaceClassLibsDirectory);
+        opcUaXml.appendChild(systemUnitClassLibsDirectory);
+        opcUaXml.appendChild(roleClassLibsDirectory);
+    }
+
+    private void initInterfaceClassLibsDirectory() {
+        interfaceClassLibsDirectory = dom.createElement(UAOBJECT);
+        String interfaceClassLibsNode = generateNodeId();
+        interfaceClassLibsDirectory.setAttribute(NODEID,interfaceClassLibsNode);
+        interfaceClassLibsDirectory.setAttribute(BROWSENAME,"InterfaceClassLibs");
+        interfaceClassLibsDirectory.setAttribute(PARENTNODEID,"ns=2;i=22");
+        Element interfaceClassLibsDisplayName  = buildBeanValue(DISPLAYNAME,"InterfaceClassLibs");
+        interfaceClassLibsDirectory.appendChild(interfaceClassLibsDisplayName);
+
+        Element interfaceClassLibsRefs  = dom.createElement(REFERENCES);
+        Element interfaceClassLibsRef = dom.createElement(REFERENCE);
+        interfaceClassLibsRef.setAttribute(REFERENCETYPE,ReferenceEnum.HASCOMPONENT.getName());
+        interfaceClassLibsRef.setAttribute(ISFORWARD,FALSE);
+        interfaceClassLibsRef.setTextContent("ns=2;i=22");
+        interfaceClassLibsRefs.appendChild(interfaceClassLibsRef);
+        Element interfaceClassLibsRef1 = dom.createElement(REFERENCE);
+        interfaceClassLibsRef1.setAttribute(REFERENCETYPE,ReferenceEnum.HASTYPEDEFINITION.getName());
+        interfaceClassLibsRef1.setTextContent("i=61");
+        interfaceClassLibsRefs.appendChild(interfaceClassLibsRef1);
+        interfaceClassLibsDirectory.appendChild(interfaceClassLibsRefs);
+
     }
 
     private void appendAliases(){
