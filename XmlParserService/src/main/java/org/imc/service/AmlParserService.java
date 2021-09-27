@@ -86,6 +86,8 @@ public class AmlParserService {
     private Element systemUnitClassLibsDirectory ;
     private Element roleClassLibsDirectory ;
 
+    private Element topologyElement;
+
     public void parseAml(String path) {
         parse(".\\XmlParserService\\src\\main\\resources\\Topology.aml");
         return;
@@ -518,22 +520,45 @@ public class AmlParserService {
         appendAliases();
 
         // 4.Directories
+        String topologyNodeId = topologyAmlInit();
+        opcUaXml.appendChild(topologyElement);
+        initInterfaceClassLibsDirectory(topologyNodeId);
+        opcUaXml.appendChild(interfaceClassLibsDirectory);
 
-        initInterfaceClassLibsDirectory();
         systemUnitClassLibsDirectory = dom.createElement(UAOBJECT);
         roleClassLibsDirectory = dom.createElement(UAOBJECT);
 
-        opcUaXml.appendChild(interfaceClassLibsDirectory);
         opcUaXml.appendChild(systemUnitClassLibsDirectory);
         opcUaXml.appendChild(roleClassLibsDirectory);
     }
 
-    private void initInterfaceClassLibsDirectory() {
+    private String topologyAmlInit() {
+        topologyElement = dom.createElement(UAOBJECT);
+        String nodeId = generateNodeId();
+        topologyElement.setAttribute(NODEID,nodeId);
+        topologyElement.setAttribute(BROWSENAME,"Topology.aml");
+        Element displayElement = buildBeanValue(DISPLAYNAME,"Topology.aml");
+        topologyElement.appendChild(displayElement);
+        Element refs = dom.createElement(REFERENCES);
+        Element ref = dom.createElement(REFERENCE);
+        ref.setAttribute(REFERENCETYPE,ReferenceEnum.HASTYPEDEFINITION.getName());
+        ref.setTextContent("ns=1;i=1005");
+        refs.appendChild(ref);
+        Element ref1 = dom.createElement(REFERENCE);
+        ref1.setAttribute(REFERENCETYPE,ReferenceEnum.ORGANIZES.getName());
+        ref1.setAttribute(ISFORWARD,FALSE);
+        ref1.setTextContent("ns=1;i=5006");
+        refs.appendChild(ref1);
+        topologyElement.appendChild(refs);
+        return nodeId;
+    }
+
+    private void initInterfaceClassLibsDirectory(String topologyNodeId) {
         interfaceClassLibsDirectory = dom.createElement(UAOBJECT);
         String interfaceClassLibsNode = generateNodeId();
         interfaceClassLibsDirectory.setAttribute(NODEID,interfaceClassLibsNode);
         interfaceClassLibsDirectory.setAttribute(BROWSENAME,"InterfaceClassLibs");
-        interfaceClassLibsDirectory.setAttribute(PARENTNODEID,"ns=2;i=22");
+        interfaceClassLibsDirectory.setAttribute(PARENTNODEID,topologyNodeId);
         Element interfaceClassLibsDisplayName  = buildBeanValue(DISPLAYNAME,"InterfaceClassLibs");
         interfaceClassLibsDirectory.appendChild(interfaceClassLibsDisplayName);
 
@@ -541,7 +566,7 @@ public class AmlParserService {
         Element interfaceClassLibsRef = dom.createElement(REFERENCE);
         interfaceClassLibsRef.setAttribute(REFERENCETYPE,ReferenceEnum.HASCOMPONENT.getName());
         interfaceClassLibsRef.setAttribute(ISFORWARD,FALSE);
-        interfaceClassLibsRef.setTextContent("ns=2;i=22");
+        interfaceClassLibsRef.setTextContent(topologyNodeId);
         interfaceClassLibsRefs.appendChild(interfaceClassLibsRef);
         Element interfaceClassLibsRef1 = dom.createElement(REFERENCE);
         interfaceClassLibsRef1.setAttribute(REFERENCETYPE,ReferenceEnum.HASTYPEDEFINITION.getName());
@@ -549,6 +574,9 @@ public class AmlParserService {
         interfaceClassLibsRefs.appendChild(interfaceClassLibsRef1);
         interfaceClassLibsDirectory.appendChild(interfaceClassLibsRefs);
 
+        Map<String,String> addReferenceMap = new HashMap<>();
+        addReferenceMap.put(REFERENCETYPE,ReferenceEnum.HASCOMPONENT.getName());
+        addReference(topologyElement,interfaceClassLibsNode,addReferenceMap);
     }
 
     private void appendAliases(){

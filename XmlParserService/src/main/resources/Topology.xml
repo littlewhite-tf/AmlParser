@@ -7,20 +7,28 @@
 <Alias Alias="Boolean">i=1</Alias>
 <Alias Alias="SByte">i=2</Alias>
 </Aliases>
-<UAObject BrowseName="InterfaceClassLibs" NodeId="ns=2;i=1" ParentNodeId="ns=2;i=22">
+<UAObject BrowseName="Topology.aml" NodeId="ns=2;i=1">
+<DisplayName>Topology.aml</DisplayName>
+<References>
+<Reference ReferenceType="HasTypeDefinition">ns=1;i=1005</Reference>
+<Reference IsForward="false" ReferenceType="Organizes">ns=1;i=5006</Reference>
+<Reference ReferenceType="HasComponent">ns=2;i=2</Reference>
+</References>
+</UAObject>
+<UAObject BrowseName="InterfaceClassLibs" NodeId="ns=2;i=2" ParentNodeId="ns=2;i=1">
 <DisplayName>InterfaceClassLibs</DisplayName>
 <References>
-<Reference IsForward="false" ReferenceType="HasComponent">ns=2;i=22</Reference>
+<Reference IsForward="false" ReferenceType="HasComponent">ns=2;i=1</Reference>
 <Reference ReferenceType="HasTypeDefinition">i=61</Reference>
-<Reference ReferenceType="HasComponent">ns=2;i=3</Reference>
+<Reference ReferenceType="HasComponent">ns=2;i=4</Reference>
 </References>
 </UAObject>
 <UAObject/>
 <UAObject/>
-<UAObjectType BrowseName="Tool" NodeId="ns=2;i=2">
+<UAObjectType BrowseName="Tool" NodeId="ns=2;i=3">
 <DisplayName>Tool</DisplayName>
 </UAObjectType>
-<UAVariable BrowseName="Version" DataType="Double" NodeId="ns=2;i=4" ParentNodeId="ns=2;i=3">
+<UAVariable BrowseName="Version" DataType="Double" NodeId="ns=2;i=5" ParentNodeId="ns=2;i=4">
 <DisplayName>Version</DisplayName>
 <Value>
 <Double xmlns="http://opcfoundation.org/UA/2008/02/Types.xsd">1.0</Double>
@@ -29,20 +37,20 @@
 <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
 </References>
 </UAVariable>
-<UAObjectType BrowseName="Energy" NodeId="ns=2;i=5">
+<UAObjectType BrowseName="Energy" NodeId="ns=2;i=6">
 <DisplayName>Energy</DisplayName>
 </UAObjectType>
-<UAObject BrowseName="MyInterfaces" NodeId="ns=2;i=3">
+<UAObject BrowseName="MyInterfaces" NodeId="ns=2;i=4">
 <DisplayName>MyInterfaces</DisplayName>
 <References>
 <Reference ReferenceType="HasTypeDefinition">i=61</Reference>
 <Reference IsForward="false" ReferenceType="Organizes">ns=1;i=5008</Reference>
-<Reference IsForward="false" ReferenceType="HasComponent">ns=2;i=1</Reference>
-<Reference ReferenceType="HasProperty">ns=2;i=4</Reference>
-<Reference ReferenceType="ns=1;i=4002">ns=2;i=5</Reference>
+<Reference IsForward="false" ReferenceType="HasComponent">ns=2;i=2</Reference>
+<Reference ReferenceType="HasProperty">ns=2;i=5</Reference>
+<Reference ReferenceType="ns=1;i=4002">ns=2;i=6</Reference>
 </References>
 </UAObject>
-<UAVariable BrowseName="ID" DataType="String" NodeId="ns=2;i=8" ParentNodeId="ns=2;i=7">
+<UAVariable BrowseName="ID" DataType="String" NodeId="ns=2;i=9" ParentNodeId="ns=2;i=8">
 <DisplayName>ID</DisplayName>
 <Value>
 <String xmlns="http://opcfoundation.org/UA/2008/02/Types.xsd">dd0e0dfe-10f8-4068-845b-9c29699ac79b</String>
@@ -51,31 +59,31 @@
 <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
 </References>
 </UAVariable>
-<UAObject BrowseName="EnergySupply" NodeId="ns=2;i=7" ParentNodeId="ns=2;i=6">
+<UAObject BrowseName="EnergySupply" NodeId="ns=2;i=8" ParentNodeId="ns=2;i=7">
 <DisplayName>EnergySupply</DisplayName>
 <References>
-<Reference ReferenceType="HasProperty">ns=2;i=8</Reference>
-<Reference ReferenceType="HasTypeDefinition">ns=2;i=5</Reference>
+<Reference ReferenceType="HasProperty">ns=2;i=9</Reference>
+<Reference ReferenceType="HasTypeDefinition">ns=2;i=6</Reference>
 </References>
 </UAObject>
-<UAObjectType BrowseName="ElectricScrewdriver" NodeId="ns=2;i=6">
+<UAObjectType BrowseName="ElectricScrewdriver" NodeId="ns=2;i=7">
 <DisplayName>ElectricScrewdriver</DisplayName>
 <References>
-<Reference ReferenceType="HasComponent">ns=2;i=7</Reference>
-<Reference ReferenceType="ns=1;i=4001">ns=2;i=2</Reference>
+<Reference ReferenceType="HasComponent">ns=2;i=8</Reference>
+<Reference ReferenceType="ns=1;i=4001">ns=2;i=3</Reference>
 </References>
 </UAObjectType>
-<UAObject BrowseName="ManufacturingSystem" NodeId="ns=2;i=9">
+<UAObject BrowseName="ManufacturingSystem" NodeId="ns=2;i=10">
 <DisplayName>ManufacturingSystem</DisplayName>
 <References>
 <Reference IsForward="false" ReferenceType="Organizes">ns=1;i=5005</Reference>
 <Reference IsForward="false" ReferenceType="HasComponent">ns=2;i=25</Reference>
 <Reference ReferenceType="HasTypeDefinition">i=61</Reference>
-<Reference ReferenceType="HasComponent">ns=2;i=10</Reference>
-<Reference ReferenceType="HasComponent">ns=2;i=15</Reference>
+<Reference ReferenceType="HasComponent">ns=2;i=11</Reference>
+<Reference ReferenceType="HasComponent">ns=2;i=16</Reference>
 </References>
 </UAObject>
-<UAVariable BrowseName="ID" DataType="String" NodeId="ns=2;i=12" ParentNodeId="ns=2;i=11">
+<UAVariable BrowseName="ID" DataType="String" NodeId="ns=2;i=13" ParentNodeId="ns=2;i=12">
 <DisplayName>ID</DisplayName>
 <Value>
 <String xmlns="http://opcfoundation.org/UA/2008/02/Types.xsd">{5f535d4c-dd46-4c1c-898c-4e58419048b6}</String>
@@ -84,14 +92,14 @@
 <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
 </References>
 </UAVariable>
-<UAObject BrowseName="EnergySupply" NodeId="ns=2;i=11" ParentNodeId="ns=2;i=10">
+<UAObject BrowseName="EnergySupply" NodeId="ns=2;i=12" ParentNodeId="ns=2;i=11">
 <DisplayName>EnergySupply</DisplayName>
 <References>
-<Reference ReferenceType="HasProperty">ns=2;i=12</Reference>
-<Reference ReferenceType="HasTypeDefinition">ns=2;i=5</Reference>
+<Reference ReferenceType="HasProperty">ns=2;i=13</Reference>
+<Reference ReferenceType="HasTypeDefinition">ns=2;i=6</Reference>
 </References>
 </UAObject>
-<UAVariable BrowseName="New Attribute" DataType="String" NodeId="ns=2;i=13" ParentNodeId="ns=2;i=10">
+<UAVariable BrowseName="New Attribute" DataType="String" NodeId="ns=2;i=14" ParentNodeId="ns=2;i=11">
 <DisplayName>New Attribute</DisplayName>
 <Value>
 <String xmlns="http://opcfoundation.org/UA/2008/02/Types.xsd"/>
@@ -100,7 +108,7 @@
 <Reference ReferenceType="HasTypeDefinition">i=63</Reference>
 </References>
 </UAVariable>
-<UAVariable BrowseName="ID" DataType="String" NodeId="ns=2;i=14" ParentNodeId="ns=2;i=10">
+<UAVariable BrowseName="ID" DataType="String" NodeId="ns=2;i=15" ParentNodeId="ns=2;i=11">
 <DisplayName>ID</DisplayName>
 <Value>
 <String xmlns="http://opcfoundation.org/UA/2008/02/Types.xsd">{788eb291-f103-4fdc-aba0-4893b599f556}</String>
@@ -109,17 +117,17 @@
 <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
 </References>
 </UAVariable>
-<UAObject BrowseName="firstScrewdriver" NodeId="ns=2;i=10">
+<UAObject BrowseName="firstScrewdriver" NodeId="ns=2;i=11">
 <DisplayName>firstScrewdriver</DisplayName>
 <References>
-<Reference ReferenceType="HasComponent">ns=2;i=11</Reference>
-<Reference ReferenceType="ns=1;i=4001">ns=2;i=2</Reference>
-<Reference ReferenceType="HasComponent">ns=2;i=13</Reference>
+<Reference ReferenceType="HasComponent">ns=2;i=12</Reference>
+<Reference ReferenceType="ns=1;i=4001">ns=2;i=3</Reference>
+<Reference ReferenceType="HasComponent">ns=2;i=14</Reference>
 <Reference ReferenceType="HasTypeDefinition"/>
-<Reference ReferenceType="HasProperty">ns=2;i=14</Reference>
+<Reference ReferenceType="HasProperty">ns=2;i=15</Reference>
 </References>
 </UAObject>
-<UAVariable BrowseName="ID" DataType="String" NodeId="ns=2;i=17" ParentNodeId="ns=2;i=16">
+<UAVariable BrowseName="ID" DataType="String" NodeId="ns=2;i=18" ParentNodeId="ns=2;i=17">
 <DisplayName>ID</DisplayName>
 <Value>
 <String xmlns="http://opcfoundation.org/UA/2008/02/Types.xsd">50e10905-ac18-413c-afab-ad8ed1569fff</String>
@@ -128,14 +136,14 @@
 <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
 </References>
 </UAVariable>
-<UAObject BrowseName="EnergySupply" NodeId="ns=2;i=16" ParentNodeId="ns=2;i=15">
+<UAObject BrowseName="EnergySupply" NodeId="ns=2;i=17" ParentNodeId="ns=2;i=16">
 <DisplayName>EnergySupply</DisplayName>
 <References>
-<Reference ReferenceType="HasProperty">ns=2;i=17</Reference>
-<Reference ReferenceType="HasTypeDefinition">ns=2;i=5</Reference>
+<Reference ReferenceType="HasProperty">ns=2;i=18</Reference>
+<Reference ReferenceType="HasTypeDefinition">ns=2;i=6</Reference>
 </References>
 </UAObject>
-<UAVariable BrowseName="ID" DataType="String" NodeId="ns=2;i=18" ParentNodeId="ns=2;i=15">
+<UAVariable BrowseName="ID" DataType="String" NodeId="ns=2;i=19" ParentNodeId="ns=2;i=16">
 <DisplayName>ID</DisplayName>
 <Value>
 <String xmlns="http://opcfoundation.org/UA/2008/02/Types.xsd">{19dcf818-4716-4fc1-a85f-28e1938c4c3a}</String>
@@ -144,13 +152,13 @@
 <Reference ReferenceType="HasTypeDefinition">i=68</Reference>
 </References>
 </UAVariable>
-<UAObject BrowseName="secondScrewdriver" NodeId="ns=2;i=15">
+<UAObject BrowseName="secondScrewdriver" NodeId="ns=2;i=16">
 <DisplayName>secondScrewdriver</DisplayName>
 <References>
-<Reference ReferenceType="HasComponent">ns=2;i=16</Reference>
-<Reference ReferenceType="ns=1;i=4001">ns=2;i=2</Reference>
+<Reference ReferenceType="HasComponent">ns=2;i=17</Reference>
+<Reference ReferenceType="ns=1;i=4001">ns=2;i=3</Reference>
 <Reference ReferenceType="HasTypeDefinition"/>
-<Reference ReferenceType="HasProperty">ns=2;i=18</Reference>
+<Reference ReferenceType="HasProperty">ns=2;i=19</Reference>
 </References>
 </UAObject>
 </UANodeSet>
