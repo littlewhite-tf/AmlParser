@@ -139,6 +139,7 @@ public class AmlParserService {
                 SystemUnitClassLib systemUnitClassLib = entry.getValue();
                 Element systemUnitClassLibElement = dom.createElement(UAOBJECT);
                 String systemUnitClassNodeId = generateNodeId();
+                systemUnitClassLib.getAttributes().put(NODEID,systemUnitClassNodeId);
                 systemUnitClassLibElement.setAttribute(NODEID, systemUnitClassNodeId);
                 systemUnitClassLibElement.setAttribute(BROWSENAME, systemUnitClassLibName);
                 Element display = buildBeanValue(DISPLAYNAME, systemUnitClassLibName);
@@ -362,6 +363,10 @@ public class AmlParserService {
             String roleClassName = entry.getKey();
             Map<String, String> roleClassAttributes = entry.getValue();
             Element element = buildObjectTypeXml(roleClassName, roleClassAttributes);
+            Map<String,String> addRefMap = new HashMap<>();
+            addRefMap.put(REFERENCETYPE,ReferenceEnum.HASSUBTYPE.getName());
+            addRefMap.put(ISFORWARD,FALSE);
+            addReference(element,"ns=1;i=1001",addRefMap);
             add4002ReferenceToParent(roleClassLibElement,element);
             opcUaXml.appendChild(element);
         }
@@ -430,6 +435,10 @@ public class AmlParserService {
             String interfaceClassName = entry.getKey();
             Map<String, String> interfaceClassAttributes = entry.getValue();
             Element element = buildObjectTypeXml(interfaceClassName, interfaceClassAttributes);
+            Map<String,String> addRefMap = new HashMap<>();
+            addRefMap.put(REFERENCETYPE,ReferenceEnum.HASSUBTYPE.getName());
+            addRefMap.put(ISFORWARD,FALSE);
+            addReference(element,"ns=1;i=1001",addRefMap);
             add4002ReferenceToParent(interfaceElement, element);
             opcUaXml.appendChild(element);
         }
@@ -803,6 +812,8 @@ public class AmlParserService {
         element.setAttribute(NODEID, nodeId);
         Element displayNameBean = buildBeanValue(DISPLAYNAME, name);
         element.appendChild(displayNameBean);
+        Element refs = dom.createElement(REFERENCES);
+        element.appendChild(refs);
         return element;
     }
 
@@ -843,12 +854,19 @@ public class AmlParserService {
         // 设置属性
         element.setAttribute(BROWSENAME, name);
         String nodeId = generateNodeId();
+        systemUnitClass.getAttributesMap().put(NODEID,nodeId);
         element.setAttribute(NODEID, nodeId);
         // 一级子节点 displayName
         Element displayNameBean = buildBeanValue(DISPLAYNAME, name);
         element.appendChild(displayNameBean);
         // 一级子节点References
         Element refersEle = dom.createElement(REFERENCES);
+
+        Element subTypeRef = dom.createElement(REFERENCE);
+        subTypeRef.setAttribute(REFERENCETYPE, ReferenceEnum.HASSUBTYPE.getName());
+        subTypeRef.setAttribute(ISFORWARD, FALSE);
+        subTypeRef.setTextContent("ns=1;i=1001");
+        refersEle.appendChild(subTypeRef);
         // ExternalInterface
         if (systemUnitClass.getExternalInterfaceAttributes().size() > 0) {
             String objectName = systemUnitClass.getExternalInterfaceAttributes().get(NAME);

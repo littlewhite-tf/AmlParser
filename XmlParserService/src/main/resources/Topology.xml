@@ -125,6 +125,9 @@
 </UAVariable>
 <UAObjectType BrowseName="Tool" NodeId="ns=2;i=10">
 <DisplayName>Tool</DisplayName>
+<References>
+<Reference IsForward="false" ReferenceType="HasSubtype">ns=1;i=1001</Reference>
+</References>
 </UAObjectType>
 <UAVariable BrowseName="Version" DataType="Double" NodeId="ns=2;i=12" ParentNodeId="ns=2;i=11">
 <DisplayName>Version</DisplayName>
@@ -137,6 +140,9 @@
 </UAVariable>
 <UAObjectType BrowseName="Energy" NodeId="ns=2;i=13">
 <DisplayName>Energy</DisplayName>
+<References>
+<Reference IsForward="false" ReferenceType="HasSubtype">ns=1;i=1001</Reference>
+</References>
 </UAObjectType>
 <UAObject BrowseName="MyInterfaces" NodeId="ns=2;i=11">
 <DisplayName>MyInterfaces</DisplayName>
@@ -185,6 +191,7 @@
 <UAObjectType BrowseName="ElectricScrewdriver" NodeId="ns=2;i=16">
 <DisplayName>ElectricScrewdriver</DisplayName>
 <References>
+<Reference IsForward="false" ReferenceType="HasSubtype">ns=1;i=1001</Reference>
 <Reference ReferenceType="HasComponent">ns=2;i=17</Reference>
 <Reference ReferenceType="ns=1;i=4001">ns=2;i=10</Reference>
 </References>
@@ -239,7 +246,7 @@
 <Reference ReferenceType="HasComponent">ns=2;i=21</Reference>
 <Reference ReferenceType="ns=1;i=4001">ns=2;i=10</Reference>
 <Reference ReferenceType="HasComponent">ns=2;i=23</Reference>
-<Reference ReferenceType="HasTypeDefinition"/>
+<Reference ReferenceType="HasTypeDefinition">ns=2;i=16</Reference>
 <Reference ReferenceType="HasProperty">ns=2;i=24</Reference>
 </References>
 </UAObject>
@@ -273,7 +280,7 @@
 <References>
 <Reference ReferenceType="HasComponent">ns=2;i=26</Reference>
 <Reference ReferenceType="ns=1;i=4001">ns=2;i=10</Reference>
-<Reference ReferenceType="HasTypeDefinition"/>
+<Reference ReferenceType="HasTypeDefinition">ns=2;i=16</Reference>
 <Reference ReferenceType="HasProperty">ns=2;i=28</Reference>
 </References>
 </UAObject>

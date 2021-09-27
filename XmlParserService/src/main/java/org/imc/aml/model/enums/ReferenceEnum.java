@@ -25,6 +25,11 @@ public enum ReferenceEnum {
     /**
      * 有属性
      */
+    HASSUBTYPE("HasSubtype"),
+
+    /**
+     * 有属性
+     */
     ORGANIZES("Organizes");
 
     private String name;
