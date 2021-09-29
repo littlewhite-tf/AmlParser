@@ -159,6 +159,10 @@ public class AmlParserService {
                 String version = systemUnitClassLib.getVersion();
                 systemUnitClassLibElement.appendChild(refs);
                 opcUaXml.appendChild(systemUnitClassLibElement);
+//                Attr attr = systemUnitClassLibElement.getAttributeNode(BROWSENAME);
+//                String a = attr.getNodeName();
+//                String b = attr.getValue();
+      //          systemUnitClassLibElement.getElementsByTagName(REFERENCES);
 
                 buildPropertyNode(VERSION, version, systemUnitClassNodeId,systemUnitClassLibElement);
                 addReference(systemUnitClassLibsDirectory, systemUnitClassNodeId, addRefMap);
@@ -175,7 +179,7 @@ public class AmlParserService {
             NodeList instanceHierarchyList = d.getElementsByTagName(INSTANCEHIERARCHY);
             // 4.1初始化内部数据结构,且构造文件夹Element
             for (int j = 0; j < instanceHierarchyList.getLength(); j++) {
-                parseInstanceHierarchy(instanceHierarchyList.item(j));
+                parseInstanceHierarchy((Element) instanceHierarchyList.item(j));
             }
             // 3.2构造输出Element
             for (Map.Entry<String, InstanceHierarchy> entry : instanceHierarchyMap.entrySet()) {
@@ -499,7 +503,7 @@ public class AmlParserService {
         systemUnitClassLibMap.put(systemUnitClassLib.getAttributes().get(NAME), systemUnitClassLib);
     }
 
-    private void parseInstanceHierarchy(Node instanceHierarchyNode) {
+    private void parseInstanceHierarchy(Element instanceHierarchyNode) {
         NamedNodeMap attributes = instanceHierarchyNode.getAttributes();
         InstanceHierarchy instanceHierarchy = new InstanceHierarchy();
         // 1.属性
@@ -507,6 +511,7 @@ public class AmlParserService {
             instanceHierarchy.getAttributes().put(attributes.item(i).getNodeName(), attributes.item(i).getNodeValue());
         }
         String instanceDirectoryId = generateNodeId();
+        instanceHierarchy.getAttributes().put(NODEID,instanceDirectoryId);
         List<ReferenceElement> references = new LinkedList<>();
         ReferenceElement referenceElement = new ReferenceElement();
         referenceElement.setValue("ns=1;i=5005");
@@ -514,7 +519,7 @@ public class AmlParserService {
         referenceElement.getAttributes().put(ISFORWARD, FALSE);
         references.add(referenceElement);
         ReferenceElement referenceElement1 = new ReferenceElement();
-        referenceElement1.setValue("ns=2;i=25");
+        referenceElement1.setValue(instanceHierarchiesDirectory.getAttribute(NODEID));
         referenceElement1.getAttributes().put(REFERENCETYPE, ReferenceEnum.HASCOMPONENT.getName());
         referenceElement1.getAttributes().put(ISFORWARD, FALSE);
         references.add(referenceElement1);
